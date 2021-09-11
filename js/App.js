@@ -5,6 +5,8 @@ class App {
   #_engine;
   #_transition;
   #_state;
+  #_sound;
+  #_bacKSound;
 
   //Scene - related
   #number = 0;
@@ -19,6 +21,7 @@ class App {
     // initialize babylon scene and engine
     this.#_engine = new BABYLON.Engine(this.#_canvas, true);
     this.#_scene = new BABYLON.Scene(this.#_engine);
+    this.#_sound =  new SoundFx();
 
     /*const camera = new BABYLON.ArcRotateCamera(Variables.cameraProperties.name, Variables.cameraProperties.alpha, Variables.cameraProperties.beta, 2, Variables.cameraProperties.target, this.#_scene);
 
@@ -90,6 +93,29 @@ class App {
     //create a fullscreen ui for all of our GUI elements
     const guiMenu = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
     guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
+
+    const imageRect = new BABYLON.GUI.Rectangle("gameContainer");
+    imageRect.width = 1;
+    imageRect.thickness = 0;
+    imageRect.position = "relative";
+    guiMenu.addControl(imageRect);
+
+    const startbg = new BABYLON.GUI.Image("startbg", "/images/startBg.jpg");
+    imageRect.addControl(startbg);
+
+    const score = new BABYLON.GUI.TextBlock("score", "Score : 1000");
+    score.resizeToFit = true;
+    score.fontFamily = "Viga";
+    score.fontSize = "64px";
+    score.color = "white";
+    score.resizeToFit = true;
+    score.top = "14px";
+    score.position = "absolute";
+    score.right= "0px";
+    score.width = 0.8;
+    score.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    imageRect.addControl(score);
+
 
     //create a simple button
     const startBtn = BABYLON.GUI.Button.CreateSimpleButton("start", "PLAY");
