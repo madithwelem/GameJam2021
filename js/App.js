@@ -99,7 +99,7 @@ class App {
     imageRect.position = "relative";
     guiMenu.addControl(imageRect);
 
-    const startbg = new BABYLON.GUI.Image("startbg", "/images/startBg.jpg");
+    const startbg = new BABYLON.GUI.Image("startbg", "/js/images/startBg.jpg");
     imageRect.addControl(startbg);
 
     const score = new BABYLON.GUI.TextBlock("score", "Score : 1000");
