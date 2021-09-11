@@ -5,8 +5,7 @@ class App {
   #_engine;
   #_transition;
   #_state;
-  #_sound;
-  #_bacKSound;
+ 
 
   //Scene - related
   #number = 0;
@@ -21,7 +20,7 @@ class App {
     // initialize babylon scene and engine
     this.#_engine = new BABYLON.Engine(this.#_canvas, true);
     this.#_scene = new BABYLON.Scene(this.#_engine);
-    this.#_sound =  new SoundFx();
+    
 
     /*const camera = new BABYLON.ArcRotateCamera(Variables.cameraProperties.name, Variables.cameraProperties.alpha, Variables.cameraProperties.beta, 2, Variables.cameraProperties.target, this.#_scene);
 
