@@ -1,28 +1,33 @@
-class App{
+class App {
   // General Entire Application
   #_scene;
   #_canvas;
   #_engine;
+  #_transition;
+  #_state;
 
   //Scene - related
   #number = 0;
 
   constructor() {
-    this.#_canvas = this.#_createCanvas(Variables.canvasProperties.id);
 
+    // Setup canvas
+    this.#_canvas = DOMManipulaotion.createCanvas(Variables.canvasProperties.id);
     // Attach to body tag
     document.body.appendChild(this.#_canvas)
-    
-    // initialize babylon scene and engine
-    this.#_engine                 = new BABYLON.Engine(this.#_canvas, true);
-    this.#_scene                  = new BABYLON.Scene(this.#_engine);
 
-    const camera                  = new BABYLON.ArcRotateCamera(Variables.cameraProperties.name, Variables.cameraProperties.alpha, Variables.cameraProperties.beta, 2, Variables.cameraProperties.target, this.#_scene);
-    
+    // initialize babylon scene and engine
+    this.#_engine = new BABYLON.Engine(this.#_canvas, true);
+    this.#_scene = new BABYLON.Scene(this.#_engine);
+
+    /*const camera = new BABYLON.ArcRotateCamera(Variables.cameraProperties.name, Variables.cameraProperties.alpha, Variables.cameraProperties.beta, 2, Variables.cameraProperties.target, this.#_scene);
+
     camera.attachControl(this._canvas, true);
-    
-    const light1                  = new BABYLON.HemisphericLight(Variables.lightProperties.name, Variables.lightProperties.target, this._scene);
-    const sphere                  = BABYLON.MeshBuilder.CreateSphere(Variables.sphereProperties.name, Variables.sphereProperties.size, this.#_scene);
+
+    const light1 = new BABYLON.HemisphericLight(Variables.lightProperties.name, Variables.lightProperties.target, this._scene);
+    const sphere = BABYLON.MeshBuilder.CreateSphere(Variables.sphereProperties.name, Variables.sphereProperties.size, this.#_scene);
+    */
+
 
     // hide/show the Inspector
     window.addEventListener("keydown", (ev) => {
@@ -32,50 +37,103 @@ class App{
           this._scene.debugLayer.hide();
         } else {
           this._scene.debugLayer.show();
+        }
       }
-    }});
+    });
 
-    // run the main render loop
+    this.#main();
+  }
+
+  async #main() {
+    await this.#gameLoad();
+
+    // Register a render loop to repeatedly render the scene
     this.#_engine.runRenderLoop(() => {
-        this.#_scene.render();
+      switch (this.#_state) {
+        case Variables.gameState.START:
+          this.#_scene.render();
+          break;
+        case Variables.gameState.CUTSCENE:
+          this.#_scene.render();
+          break;
+        case Variables.gameState.GAME:
+          this.#_scene.render();
+          break;
+        case Variables.gameState.LOSE:
+          this.#_scene.render();
+          break;
+        default: break;
+      }
+    });
+
+    //resize if the screen is resized/rotated
+    window.addEventListener('resize', () => {
+      this.#_engine.resize();
     });
   }
-
-   //set up the canvas
-  #_createCanvas(canvasId) {
-
-    //create the canvas html element and attach it to the webpage
-    let canvas = document.createElement("canvas");
-    canvas.style.width = Variables.canvasProperties.width;
-    canvas.style.height = Variables.canvasProperties.height;
-    canvas.id = canvasId;
-    
-    return canvas;
-  }
-
 
   /**
    * 
    * Responsible for application start loading UI
    * 
    */
-  #_applicationStartScene () {
-    this.#_engine.displayLoadingUI(); // Always display loading UI when called
 
-    // -- Scene Setup
-    this.#_scene.detachControl(); // disables user input
+  async #gameLoad() {
+    this.#_engine.displayLoadingUI();
 
-    const scene = new BABYLON.scene(this.#_engine);
+    this.#_scene.detachControl();
+    let scene = new BABYLON.Scene(this._engine);
     scene.clearColor = new BABYLON.Color4(0, 0, 0, 1);
+    let camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, 0), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
 
-    // Creating and positioning free camera
-    const camera = new BABYLON.FreeCamera(Variables.cameraProperties.name, new BABYLON.Vector3(0, 0, 0), scene);
-    camera.setTarget(Vector3.Zero()); //targets the camera to scene origin
+    //create a fullscreen ui for all of our GUI elements
+    const guiMenu = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
+
+    //create a simple button
+    const startBtn = BABYLON.GUI.Button.CreateSimpleButton("start", "PLAY");
+    startBtn.width = 0.2;
+    startBtn.height = "40px";
+    startBtn.color = "white";
+    startBtn.top = "-14px";
+    startBtn.thickness = 0;
+    startBtn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    guiMenu.addControl(startBtn);
+
+    //--SOUNDS--
+    const start = new BABYLON.Sound("startSong", "sound/copycat(revised).mp3", scene, function () {
+    }, {
+        volume: 0.25,
+        loop: true,
+        autoplay: true
+    });
+
+    const sfx = new BABYLON.Sound("selection", "sound/vgmenuselect.wav", scene, function () {
+
+      console.log("");
+
+    });
 
 
-    // -- Sound Setup
+    //this handles interactions with the start button attached to the scene
+    startBtn.onPointerDownObservable.add(() => {
+      //this._goToCutScene();
+      console.log("GOing to cut");
+      scene.detachControl(); //observables disabled
+    });
 
+    //--SCENE FINISHED LOADING--
+    await scene.whenReadyAsync();
+    this.#_engine.hideLoadingUI();
+    //lastly set the current state to the start state and set the scene to the start scene
+    this.#_scene.dispose();
+    this.#_scene = scene;
+    this.#_state = Variables.gameState.START;
+  }
 
+  #applicationCutScene(cutSceneIndentifier) {
+    console.log("Cut Scene Indentifier " + cutSceneIndentifier);
   }
 }
 
