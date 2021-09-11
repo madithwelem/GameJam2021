@@ -109,8 +109,8 @@ class App {
     score.color = "white";
     score.resizeToFit = true;
     score.top = "14px";
-    score.position = "absolute";
-    score.right= "0px";
+    score.position = "fixed";
+    score.left= "500px";
     score.width = 0.8;
     score.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     imageRect.addControl(score);
@@ -122,6 +122,7 @@ class App {
     startBtn.height = "40px";
     startBtn.color = "white";
     startBtn.top = "-14px";
+    startBtn.background = "red";
     startBtn.thickness = 0;
     startBtn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
     guiMenu.addControl(startBtn);
