@@ -5,7 +5,8 @@ class App {
   #_engine;
   #_transition;
   #_state;
- 
+  #_cutScene;
+
 
   //Scene - related
   #number = 0;
@@ -20,7 +21,7 @@ class App {
     // initialize babylon scene and engine
     this.#_engine = new BABYLON.Engine(this.#_canvas, true);
     this.#_scene = new BABYLON.Scene(this.#_engine);
-    
+
 
     /*const camera = new BABYLON.ArcRotateCamera(Variables.cameraProperties.name, Variables.cameraProperties.alpha, Variables.cameraProperties.beta, 2, Variables.cameraProperties.target, this.#_scene);
 
@@ -110,7 +111,7 @@ class App {
     score.resizeToFit = true;
     score.top = "14px";
     score.position = "fixed";
-    score.left= "500px";
+    score.left = "500px";
     score.width = 0.8;
     score.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     imageRect.addControl(score);
@@ -130,9 +131,9 @@ class App {
     //--SOUNDS--
     const start = new BABYLON.Sound("startSong", "sound/copycat(revised).mp3", scene, function () {
     }, {
-        volume: 0.25,
-        loop: true,
-        autoplay: true
+      volume: 0.25,
+      loop: true,
+      autoplay: true
     });
 
     const sfx = new BABYLON.Sound("selection", "sound/vgmenuselect.wav", scene, function () {
@@ -141,13 +142,47 @@ class App {
 
     });
 
+    //set up transition effect : modified version of https://www.babylonjs-playground.com/#2FGYE8#0
+    BABYLON.Effect.RegisterShader("fade",
+      "precision highp float;" +
+      "varying vec2 vUV;" +
+      "uniform sampler2D textureSampler; " +
+      "uniform float fadeLevel; " +
+      "void main(void){" +
+      "vec4 baseColor = texture2D(textureSampler, vUV) * fadeLevel;" +
+      "baseColor.a = 1.0;" +
+      "gl_FragColor = baseColor;" +
+      "}");
+
+    let fadeLevel = 1.0;
+    this._transition = false;
+    scene.registerBeforeRender(() => {
+      if (this._transition) {
+        fadeLevel -= .05;
+        if (fadeLevel <= 0) {
+          this.#applicationCutScene();
+          this._transition = false;
+        }
+      }
+    })
+
 
     //this handles interactions with the start button attached to the scene
     startBtn.onPointerDownObservable.add(() => {
       //this._goToCutScene();
-      console.log("GOing to cut");
+      const postProcess = new BABYLON.PostProcess("Fade", "fade", ["fadeLevel"], null, 1.0, camera);
+      postProcess.onApply = (effect) => {
+        effect.setFloat("fadeLevel", fadeLevel);
+      };
+
+      this._transition = true;
+      //sounds
+      sfx.play();
+
+      console.log("Going to cut scene");
       scene.detachControl(); //observables disabled
     });
+
 
     //--SCENE FINISHED LOADING--
     await scene.whenReadyAsync();
@@ -158,8 +193,156 @@ class App {
     this.#_state = Variables.gameState.START;
   }
 
-  #applicationCutScene(cutSceneIndentifier) {
-    console.log("Cut Scene Indentifier " + cutSceneIndentifier);
+  async #applicationCutScene() {
+    this.#_engine.displayLoadingUI();
+
+    this.#_scene.detachControl();
+    this.#_cutScene = new BABYLON.Scene(this.#_engine)
+
+    let camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 0, 0), this.#_cutScene)
+    camera.setTarget(BABYLON.Vector3.Zero());
+    this.#_cutScene.clearColor = new BABYLON.Color4(0, 0, 0, 1)
+
+    //GUI
+    const cutScene = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("cutscene");
+    let transition = 0;
+    let canplay = false;
+    let finished_anim = false;
+    let anims_loaded = 0;
+
+    //Animation
+    const beginning_anim = new BABYLON.GUI.Image("sparkLife", "../images/sprites/alien.png");
+    beginning_anim.stretch = BABYLON.GUI.Image.STRETCH_UNIFORM;
+    beginning_anim.cellId = 0;
+    beginning_anim.cellHeight = 480;
+    beginning_anim.cellWidth = 480;
+    beginning_anim.sourceWidth = 480;
+    beginning_anim.sourceHeight = 480;
+    cutScene.addControl(beginning_anim);
+    beginning_anim.onImageLoadedObservable.add(() => {
+      anims_loaded++;
+    })
+
+    //--PLAYING ANIMATIONS--
+    let animTimer;
+    let anim2Timer;
+    let anim = 1; //keeps track of which animation we're playing
+
+    this.#_cutScene.onBeforeRenderObservable.add(() => {
+      if (anims_loaded == 8) {
+        this.#_engine.hideLoadingUI();
+        anims_loaded = 0;
+
+        //animation sequence
+        animTimer = setInterval(() => {
+          switch (anim) {
+            case 1:
+              if (beginning_anim.cellId == 9) { //each animation could have a different number of frames
+                anim++;
+                beginning_anim.isVisible = false; // current animation hidden
+                working_anim.isVisible = true; // show the next animation
+              } else {
+                beginning_anim.cellId++;
+              }
+              break;
+            case 2:
+              if (working_anim.cellId == 11) {
+                anim++;
+                working_anim.isVisible = false;
+                dropoff_anim.isVisible = true;
+              } else {
+                working_anim.cellId++;
+              }
+              break;
+            case 3:
+              if (dropoff_anim.cellId == 11) {
+                anim++;
+                dropoff_anim.isVisible = false;
+                leaving_anim.isVisible = true;
+              } else {
+                dropoff_anim.cellId++;
+              }
+              break;
+            case 4:
+              if (leaving_anim.cellId == 9) {
+                anim++;
+                leaving_anim.isVisible = false;
+                watermelon_anim.isVisible = true;
+              } else {
+                leaving_anim.cellId++;
+              }
+              break;
+            default:
+              break;
+          }
+        }, 250);
+
+        //animation sequence 2 that uses a different time interval
+        anim2Timer = setInterval(() => {
+          switch (anim) {
+            case 5:
+              if (watermelon_anim.cellId == 8) {
+                anim++;
+                watermelon_anim.isVisible = false;
+                reading_anim.isVisible = true;
+              } else {
+                watermelon_anim.cellId++;
+              }
+              break;
+            case 6:
+              if (reading_anim.cellId == 11) {
+                reading_anim.isVisible = false;
+                finished_anim = true;
+                dialogueBg.isVisible = true;
+                dialogue.isVisible = true;
+                next.isVisible = true;
+              } else {
+                reading_anim.cellId++;
+              }
+              break;
+          }
+        }, 750);
+      }
+      //only once all of the game assets have finished loading and you've completed the animation sequence + dialogue can you go to the game state
+      if (finishedLoading && canplay) {
+        canplay = false;
+        this.#gameLoad();
+      }
+    })
+
+    //--PROGRESS DIALOGUE--
+    const next = BABYLON.GUI.Button.CreateImageOnlyButton("next", "../images/sprites/alien.png");
+    next.rotation = Math.PI / 2;
+    next.thickness = 0;
+    next.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    next.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    next.width = "64px";
+    next.height = "64px";
+    next.top = "-3%";
+    next.left = "-12%";
+    next.isVisible = false;
+    cutScene.addControl(next);
+    console.log("Cut Scene Indentifier ");
+
+    next.onPointerUpObservable.add(() => {
+      if (transition == 8) { //once we reach the last dialogue frame, goToGame
+        this.#_cutScene.detachControl();
+        this.#_engine.displayLoadingUI(); //if the game hasn't loaded yet, we'll see a loading screen
+        transition = 0;
+        canplay = true;
+      } else if (transition < 8) { // 8 frames of dialogue
+        transition++;
+        dialogue.cellId++;
+      }
+    })
+
+    await this.#_cutScene.whenReadyAsync();
+    this.#_scene.dispose();
+    this.#_state = Variables.gameState.CUTSCENE;
+    this.#_scene = this.#_cutScene;
+
+    //--START LOADING AND SETTING UP THE GAME DURING THIS SCENE--
+    var finishedLoading = false;
   }
 }
 
