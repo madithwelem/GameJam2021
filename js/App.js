@@ -128,20 +128,6 @@ class App {
     startBtn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
     guiMenu.addControl(startBtn);
 
-    //--SOUNDS--
-    const start = new BABYLON.Sound("startSong", "sound/copycat(revised).mp3", scene, function () {
-    }, {
-      volume: 0.25,
-      loop: true,
-      autoplay: true
-    });
-
-    const sfx = new BABYLON.Sound("selection", "sound/vgmenuselect.wav", scene, function () {
-
-      console.log("");
-
-    });
-
     //set up transition effect : modified version of https://www.babylonjs-playground.com/#2FGYE8#0
     BABYLON.Effect.RegisterShader("fade",
       "precision highp float;" +
@@ -166,6 +152,20 @@ class App {
       }
     })
 
+    //--SOUNDS--
+    const start = new BABYLON.Sound("startSong", "sound/copycat(revised).mp3", scene, function () {
+    }, {
+      volume: 0.25,
+      loop: true,
+      autoplay: true
+    });
+
+    const sfx = new BABYLON.Sound("selection", "sound/vgmenuselect.wav", scene, function () {
+
+      console.log("");
+
+    });
+
 
     //this handles interactions with the start button attached to the scene
     startBtn.onPointerDownObservable.add(() => {
@@ -179,10 +179,9 @@ class App {
       //sounds
       sfx.play();
 
-      console.log("Going to cut scene");
+      console.log("GOing to cut");
       scene.detachControl(); //observables disabled
     });
-
 
     //--SCENE FINISHED LOADING--
     await scene.whenReadyAsync();
@@ -194,7 +193,7 @@ class App {
   }
 
   async #applicationCutScene() {
-    this.#_engine.displayLoadingUI();
+    // this.#_engine.displayLoadingUI();
 
     this.#_scene.detachControl();
     this.#_cutScene = new BABYLON.Scene(this.#_engine)
@@ -222,6 +221,29 @@ class App {
     beginning_anim.onImageLoadedObservable.add(() => {
       anims_loaded++;
     })
+
+    //skip cutscene
+    const skipBtn = BABYLON.GUI.Button.CreateSimpleButton("skip", "SKIP");
+    skipBtn.fontFamily = "Viga";
+    skipBtn.width = "45px";
+    skipBtn.left = "-14px";
+    skipBtn.height = "40px";
+    skipBtn.color = "white";
+    skipBtn.top = "14px";
+    skipBtn.thickness = 0;
+    skipBtn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    skipBtn.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    cutScene.addControl(skipBtn);
+
+    skipBtn.onPointerDownObservable.add(() => {
+      this.cutScene.detachControl();
+      clearInterval(animTimer);
+      clearInterval(anim2Timer);
+      clearInterval(dialogueTimer);
+      this.#_engine.displayLoadingUI();
+      canplay = true;
+    });
+
 
     //--PLAYING ANIMATIONS--
     let animTimer;
@@ -303,6 +325,7 @@ class App {
           }
         }, 750);
       }
+
       //only once all of the game assets have finished loading and you've completed the animation sequence + dialogue can you go to the game state
       if (finishedLoading && canplay) {
         canplay = false;
@@ -343,6 +366,7 @@ class App {
 
     //--START LOADING AND SETTING UP THE GAME DURING THIS SCENE--
     var finishedLoading = false;
+
   }
 }
 
