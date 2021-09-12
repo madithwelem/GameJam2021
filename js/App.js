@@ -164,8 +164,8 @@ class App {
       };
 
       this._transition = true;
+
       //sounds
-      console.log("GOing to cut");
       soundThemeSong.stop();
       soundClick.play();
       scene.detachControl(); //observables disabled
@@ -195,44 +195,43 @@ class App {
 
     //GUI
     const cutScene = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("cutscene");
-    let transition = 0;
-    let canplay = false;
-    let finished_anim = false;
-    let anims_loaded = 0;
 
-    //Animation
-    const beginning_anim = new BABYLON.GUI.Image("Start", "../images/sprites/final.png");
-    beginning_anim.stretch = BABYLON.GUI.Image.STRETCH_UNIFORM;
-    beginning_anim.cellId = 0;
-    beginning_anim.cellHeight = 480;
-    beginning_anim.cellWidth = 480;
-    beginning_anim.sourceWidth = 480;
-    beginning_anim.sourceHeight = 480;
-    cutScene.addControl(beginning_anim);
-    beginning_anim.onImageLoadedObservable.add(() => {
-      anims_loaded++;
+    const imageRect = new BABYLON.GUI.Rectangle("gameContainer");
+    imageRect.width = 1;
+    imageRect.thickness = 0;
+    imageRect.position = "relative";
+    cutScene.addControl(imageRect);
 
-    })
+    const cutSceneBg = new BABYLON.GUI.Image("cutSceneBg", "/images/cutSceneBg.jpg");
+    imageRect.addControl(cutSceneBg);
+
+    const storyLine = new BABYLON.GUI.TextBlock("storyLine", "Welcome to the world of extraterrestrial,\n Back in 2009 Aliens were passing by earth and their spaceship \nmalfunctioned and they decided to land on earth to fix their \nspaceship one institution ruined it all, the government\n MNU and destroyed the base \n . aliens and men lived together and all food was \n being depleted fast. \
+    The aliens started to attack the people to \n convert them to their kind they have to \nhelp everyone and eradicate the extraterrestrial life.");
+    storyLine.resizeToFit = true;
+    storyLine.fontFamily = "Viga";
+    storyLine.fontSize = "64px";
+    storyLine.color = "rgb(255,255,255, 0.5)";
+    storyLine.top = "30px";
+    storyLine.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    imageRect.addControl(storyLine);
 
     //skip cutscene
     const skipBtn = BABYLON.GUI.Button.CreateSimpleButton("skip", "SKIP");
     skipBtn.fontFamily = "Viga";
     skipBtn.width = "45px";
     skipBtn.left = "-14px";
-    skipBtn.height = "40px";
+    skipBtn.height = "60px";
     skipBtn.color = "white";
-    skipBtn.top = "14px";
+    skipBtn.top = "20px";
     skipBtn.thickness = 0;
     skipBtn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     skipBtn.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
     cutScene.addControl(skipBtn);
-    
-
+  
     skipBtn.onPointerDownObservable.add(() => {
-      this._transition = true;
+ 
       //sounds
       this.#firstScene();
-      // this.cutScene.detachControl();
       clearInterval(animTimer);
       clearInterval(anim2Timer);
       clearInterval(dialogueTimer);
@@ -240,121 +239,12 @@ class App {
       canplay = true;
     });
 
-
-    //--PLAYING ANIMATIONS--
-    let animTimer;
-    let anim2Timer;
-    let anim = 1; //keeps track of which animation we're playing
-
-    this.#_cutScene.onBeforeRenderObservable.add(() => {
-      if (anims_loaded == 8) {
-        this.#_engine.hideLoadingUI();
-        anims_loaded = 0;
-
-        //animation sequence
-        animTimer = setInterval(() => {
-          switch (anim) {
-            case 1:
-              if (beginning_anim.cellId == 9) { //each animation could have a different number of frames
-                anim++;
-                beginning_anim.isVisible = false; // current animation hidden
-                working_anim.isVisible = true; // show the next animation
-              } else {
-                beginning_anim.cellId++;
-              }
-              break;
-            case 2:
-              if (working_anim.cellId == 11) {
-                anim++;
-                working_anim.isVisible = false;
-                dropoff_anim.isVisible = true;
-              } else {
-                working_anim.cellId++;
-              }
-              break;
-            case 3:
-              if (dropoff_anim.cellId == 11) {
-                anim++;
-                dropoff_anim.isVisible = false;
-                leaving_anim.isVisible = true;
-              } else {
-                dropoff_anim.cellId++;
-              }
-              break;
-            case 4:
-              if (leaving_anim.cellId == 9) {
-                anim++;
-                leaving_anim.isVisible = false;
-                watermelon_anim.isVisible = true;
-              } else {
-                leaving_anim.cellId++;
-              }
-              break;
-            default:
-              break;
-          }
-        }, 250);
-
-        //animation sequence 2 that uses a different time interval
-        anim2Timer = setInterval(() => {
-          switch (anim) {
-            case 5:
-              if (watermelon_anim.cellId == 8) {
-                anim++;
-                watermelon_anim.isVisible = false;
-                reading_anim.isVisible = true;
-              } else {
-                watermelon_anim.cellId++;
-              }
-              break;
-            case 6:
-              if (reading_anim.cellId == 11) {
-                reading_anim.isVisible = false;
-                finished_anim = true;
-                dialogueBg.isVisible = true;
-                dialogue.isVisible = true;
-                next.isVisible = true;
-              } else {
-                reading_anim.cellId++;
-              }
-              break;
-          }
-        }, 750);
-      }
-
       //only once all of the game assets have finished loading and you've completed the animation sequence + dialogue can you go to the game state
-      if (finishedLoading && canplay) {
-        canplay = false;
-        this.#gameLoad();
-      }
-    })
-
-    //--PROGRESS DIALOGUE--
-    const next = BABYLON.GUI.Button.CreateImageOnlyButton("next", "../images/sprites/final.png");
-    next.rotation = Math.PI / 2;
-    next.thickness = 0;
-    next.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    next.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
-    next.width = "64px";
-    next.height = "64px";
-    next.top = "-3%";
-    next.left = "-12%";
-    next.isVisible = false;
-    cutScene.addControl(next);
-    console.log("Cut Scene Indentifier ");
-
-    next.onPointerUpObservable.add(() => {
-      if (transition == 8) { //once we reach the last dialogue frame, goToGame
-        this.#_cutScene.detachControl();
-        this.#_engine.displayLoadingUI(); //if the game hasn't loaded yet, we'll see a loading screen
-        transition = 0;
-        canplay = true;
-      } else if (transition < 8) { // 8 frames of dialogue
-        transition++;
-        dialogue.cellId++;
-      }
-    })
-
+    if (finishedLoading && canplay) {
+      canplay = false;
+      this.#firstScene();
+    }
+    
     await this.#_cutScene.whenReadyAsync();
     this.#_scene.dispose();
     this.#_state = Variables.gameState.CUTSCENE;
@@ -374,20 +264,6 @@ class App {
     const firstScene = new FirstScene(scene);
     this.#_firstScene = firstScene;
   }
-
-  /*#loadCharacterAssets(scene) {
-    return this.#firstSceneObj.loadCharacter().then(assets => {
-      this.#_sceneone_asset = assets;
-    });
-  }
-
-  async #loadSceneSound(scene){
-
-    await this.#firstSceneObj.setSceneSoundSetup(scene);
-    this.#_sceneone_sound = { ...this.#firstSceneObj.getSceneSoundSetup() };
-
-  }*/
-
 
 }
 new App();
