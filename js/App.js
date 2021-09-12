@@ -6,8 +6,17 @@ class App {
   #_transition;
   #_state;
   #_gamescene;
- 
 
+  #_winSfx;
+  #_attackedSfx;
+  #_celebrateSfx;
+  #_collectSfx;
+  #_loseSfx;
+  #_selectSfx;
+  #_shootSfx;
+  #_slaySfx;
+
+  
   //Scene - related
   #number = 0;
   #_firstScene;
@@ -34,12 +43,12 @@ class App {
         }
       }
     });
-
     this.#main();
   }
 
   async #main() {
     await this.#gameLoad();
+    this.#loadSoundFx(0.6);
 
     // Register a render loop to repeatedly render the scene
     this.#_engine.runRenderLoop(() => {
@@ -127,7 +136,7 @@ class App {
         autoplay: true
     });
 
-    const soundClick = new BABYLON.Sound("selection", "sound/vgmenuselect.wav", scene, null, {volume: 0.15});
+    
 
 
     //this handles interactions with the start button attached to the scene
@@ -136,7 +145,7 @@ class App {
       
 
       soundThemeSong.stop();
-      soundClick.play();
+      this.#_selectSfx.play();
       scene.detachControl(); //observables disabled
       this.#firstScene();
       
@@ -162,6 +171,42 @@ class App {
     this.#_scene = scene;
     const firstScene = new FirstScene(scene);
     this.#_firstScene = firstScene;
+  }
+
+
+  #loadSoundFx(vol){
+    this.#_attackedSfx = new BABYLON.Sound("startSong", "sound/attacked.mp3", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });    
+    this.#_celebrateSfx = new BABYLON.Sound("startSong", "sound/celebrate.mp3", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });    
+    this.#_collectSfx = new BABYLON.Sound("startSong", "sound/collect.mp3", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });    
+    this.#_loseSfx = new BABYLON.Sound("startSong", "sound/lose.mp3", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });    
+    this.#_selectSfx = new BABYLON.Sound("startSong", "sound/select.wav", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });    
+    this.#_shootSfx = new BABYLON.Sound("startSong", "sound/shoot.mp3", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });    
+    this.#_slaySfx = new BABYLON.Sound("startSong", "sound/slay.mp3", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });    
+    this.#_winSfx = new BABYLON.Sound("startSong", "sound/win.mp3", this.#_scene, function () {
+    }, {
+        volume:vol,
+    });
   }
 
   /*#loadCharacterAssets(scene) {
