@@ -31,4 +31,8 @@ class Variables {
     width       : "100%",
     id          : "gameCanvas"
   };
+
+  static houseProperties = {
+    width: 2,
+  }
 }
