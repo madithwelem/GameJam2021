@@ -165,13 +165,11 @@ class App {
 
       this._transition = true;
       //sounds
-      sfx.play();
-
       console.log("GOing to cut");
       soundThemeSong.stop();
       soundClick.play();
       scene.detachControl(); //observables disabled
-      this.#firstScene();
+      this.#applicationCutScene();
       
     });
 
@@ -203,7 +201,7 @@ class App {
     let anims_loaded = 0;
 
     //Animation
-    const beginning_anim = new BABYLON.GUI.Image("sparkLife", "../images/sprites/alien.png");
+    const beginning_anim = new BABYLON.GUI.Image("Start", "../images/sprites/final.png");
     beginning_anim.stretch = BABYLON.GUI.Image.STRETCH_UNIFORM;
     beginning_anim.cellId = 0;
     beginning_anim.cellHeight = 480;
@@ -213,6 +211,7 @@ class App {
     cutScene.addControl(beginning_anim);
     beginning_anim.onImageLoadedObservable.add(() => {
       anims_loaded++;
+
     })
 
     //skip cutscene
@@ -227,9 +226,13 @@ class App {
     skipBtn.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_TOP;
     skipBtn.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
     cutScene.addControl(skipBtn);
+    
 
     skipBtn.onPointerDownObservable.add(() => {
-      this.cutScene.detachControl();
+      this._transition = true;
+      //sounds
+      this.#firstScene();
+      // this.cutScene.detachControl();
       clearInterval(animTimer);
       clearInterval(anim2Timer);
       clearInterval(dialogueTimer);
@@ -327,7 +330,7 @@ class App {
     })
 
     //--PROGRESS DIALOGUE--
-    const next = BABYLON.GUI.Button.CreateImageOnlyButton("next", "../images/sprites/alien.png");
+    const next = BABYLON.GUI.Button.CreateImageOnlyButton("next", "../images/sprites/final.png");
     next.rotation = Math.PI / 2;
     next.thickness = 0;
     next.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
@@ -359,6 +362,8 @@ class App {
 
     //--START LOADING AND SETTING UP THE GAME DURING THIS SCENE--
     var finishedLoading = false;
+
+    console.log("final ");
 
   }
 
