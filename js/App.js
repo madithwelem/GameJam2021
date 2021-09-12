@@ -5,10 +5,12 @@ class App {
   #_engine;
   #_transition;
   #_state;
+  #_gamescene;
  
 
   //Scene - related
   #number = 0;
+  #_firstScene;
 
   constructor() {
 
@@ -20,25 +22,15 @@ class App {
     // initialize babylon scene and engine
     this.#_engine = new BABYLON.Engine(this.#_canvas, true);
     this.#_scene = new BABYLON.Scene(this.#_engine);
-    
-
-    /*const camera = new BABYLON.ArcRotateCamera(Variables.cameraProperties.name, Variables.cameraProperties.alpha, Variables.cameraProperties.beta, 2, Variables.cameraProperties.target, this.#_scene);
-
-    camera.attachControl(this._canvas, true);
-
-    const light1 = new BABYLON.HemisphericLight(Variables.lightProperties.name, Variables.lightProperties.target, this._scene);
-    const sphere = BABYLON.MeshBuilder.CreateSphere(Variables.sphereProperties.name, Variables.sphereProperties.size, this.#_scene);
-    */
-
 
     // hide/show the Inspector
     window.addEventListener("keydown", (ev) => {
       // Shift+Ctrl+Alt+I
       if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
-        if (this._scene.debugLayer.isVisible()) {
-          this._scene.debugLayer.hide();
+        if (this.#_scene.debugLayer.isVisible()) {
+          this.#_scene.debugLayer.hide();
         } else {
-          this._scene.debugLayer.show();
+          this.#_scene.debugLayer.show();
         }
       }
     });
@@ -81,6 +73,7 @@ class App {
    */
 
   async #gameLoad() {
+
     this.#_engine.displayLoadingUI();
 
     this.#_scene.detachControl();
@@ -128,25 +121,25 @@ class App {
     guiMenu.addControl(startBtn);
 
     //--SOUNDS--
-    const start = new BABYLON.Sound("startSong", "sound/copycat(revised).mp3", scene, function () {
-    }, {
-        volume: 0.25,
+    const soundThemeSong = new BABYLON.Sound("startSong", "sound/copycat(revised).mp3", scene, null, {
+        volume: 0.20,
         loop: true,
         autoplay: true
     });
 
-    const sfx = new BABYLON.Sound("selection", "sound/vgmenuselect.wav", scene, function () {
-
-      console.log("");
-
-    });
+    const soundClick = new BABYLON.Sound("selection", "sound/vgmenuselect.wav", scene, null, {volume: 0.15});
 
 
     //this handles interactions with the start button attached to the scene
     startBtn.onPointerDownObservable.add(() => {
       //this._goToCutScene();
-      console.log("GOing to cut");
+      
+
+      soundThemeSong.stop();
+      soundClick.play();
       scene.detachControl(); //observables disabled
+      this.#firstScene();
+      
     });
 
     //--SCENE FINISHED LOADING--
@@ -156,11 +149,34 @@ class App {
     this.#_scene.dispose();
     this.#_scene = scene;
     this.#_state = Variables.gameState.START;
+
   }
 
   #applicationCutScene(cutSceneIndentifier) {
     console.log("Cut Scene Indentifier " + cutSceneIndentifier);
   }
-}
 
+  async #firstScene() {
+
+    const scene =  new BABYLON.Scene(this.#_engine);
+    this.#_scene = scene;
+    const firstScene = new FirstScene(scene);
+    this.#_firstScene = firstScene;
+  }
+
+  /*#loadCharacterAssets(scene) {
+    return this.#firstSceneObj.loadCharacter().then(assets => {
+      this.#_sceneone_asset = assets;
+    });
+  }
+
+  async #loadSceneSound(scene){
+
+    await this.#firstSceneObj.setSceneSoundSetup(scene);
+    this.#_sceneone_sound = { ...this.#firstSceneObj.getSceneSoundSetup() };
+
+  }*/
+
+
+}
 new App();
